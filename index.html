@@ -5,28 +5,27 @@
     <title>LUNA // CORE SYSTEM</title>
     <link rel="stylesheet" href="style.css">
     <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
-    <!-- En tu index.html -->
-    <link rel="manifest" href="/manifest.json">
+    <!-- Rutas corregidas para tu repositorio /Luna/ -->
+    <link rel="manifest" href="/Luna/manifest.json">
     <script>
-  if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('/sw.js');
-  }
-</script>
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/Luna/sw.js')
+                .catch(err => console.log('Error SW:', err));
+        }
+    </script>
 </head>
 <body>
     <canvas id="canvas-core"></canvas>
     
-    <!-- NUEVO: Barra superior de cristal esmerilado -->
     <div class="top-glass-bar">
         <span class="status-dot"></span>
-        <span class="sys-text">LUNA // ENLACE NEURAL</span>
+        <span class="sys-text">LUNA_OS // ENLACE NEURAL</span>
         <span class="separator">|</span>
         <span class="sys-text" id="reloj">00:00:00</span>
         <span class="separator">|</span>
         <span class="sys-text">MÉRIDA, YUC.</span>
     </div>
 
-    <!-- EL NÚCLEO CENTRAL (Sin cambios, sigue siendo hermoso) -->
     <div class="hud">
         <div class="pulse-container">
             <div class="pulse-ring"></div>
@@ -34,13 +33,11 @@
         </div>
         
         <div class="info-panel">
-            <!-- Ecualizador sutil integrado arriba del texto -->
             <div class="audio-visualizer" id="visualizador-voz">
                 <div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
             </div>
-            
             <h1 class="glitch-text">LUNA // EN ESPERA</h1>
-            <div id="display" class="hologram-panel">> FASE LUNAR ESTABLE. ESPERANDO COMANDOS, CARIÑO.</div>
+            <div id="display" class="hologram-panel">> SISTEMA LUNAR EN LÍNEA.</div>
         </div>
     </div>
 

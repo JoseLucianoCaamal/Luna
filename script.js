@@ -4,13 +4,12 @@ const display = document.getElementById('display');
 const hud = document.querySelector('.hud');
 const barrasAudio = document.querySelectorAll('.bar');
 
-// --- CONFIGURACIÓN DE TU TÚNEL (TU URL DE CLOUDFLARE) ---
 const API_URL = 'https://cumulative-charlie-manufacturers-simpsons.trycloudflare.com/chat';
 
 canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
 
-// --- 1. RED NEURONAL LUNAR (Tus animacionesss) ---
+// --- 1. RED NEURONAL ---
 let particles = Array.from({length: 100}, () => ({
     x: Math.random() * canvas.width, y: Math.random() * canvas.height,
     vx: (Math.random() - 0.5) * 1.0, vy: (Math.random() - 0.5) * 1.0
@@ -60,12 +59,12 @@ function animate() {
 }
 animate();
 
-// --- 2. INTELIGENCIA DE VOZ Y MICRÓFONO ---
+// --- 2. INTELIGENCIA DE VOZ ---
 const Rec = window.SpeechRecognition || window.webkitSpeechRecognition;
 const rec = new Rec();
-rec.continuous = true;
+rec.continuous = false;
 rec.interimResults = false;
-rec.lang = 'es-ES';
+rec.lang = 'es-MX';
 
 rec.onresult = async (e) => {
     const transcript = e.results[e.results.length - 1][0].transcript.toLowerCase();
@@ -75,10 +74,9 @@ rec.onresult = async (e) => {
         const comando = transcript.replace(/luna/gi, '').trim();
         
         if (comando.length > 0) {
-            escribirTexto(`> ESCUCHANDO: "${comando.toUpperCase()}"...`);
+            display.textContent = "> PROCESANDO...";
             
             try {
-                // AQUÍ LLAMAMOS A TU SERVIDOR EN LINUX A TRAVÉS DEL TÚNEL
                 const res = await fetch(API_URL, {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
@@ -86,56 +84,58 @@ rec.onresult = async (e) => {
                 });
                 const data = await res.json();
                 
-                await escribirTexto(`> ${data.respuesta.toUpperCase()}`);
+                // PRIORIDAD: Hablar primero, escribir en segundo plano
                 hablar(data.respuesta);
+                escribirTexto(data.respuesta.toUpperCase());
                 
             } catch (err) {
                 hablar("Interferencia detectada, Jefe.");
-                escribirTexto("> ERROR DE ENTRADA CÓSMICA.");
+                display.textContent = "> ERROR DE CONEXIÓN.";
             }
         } else {
-            escribirTexto("> LUNA EN LÍNEA. DIME...");
+            display.textContent = "> LUNA EN LÍNEA. DIME...";
         }
     }
 };
 
-rec.start();
 rec.onend = () => rec.start(); 
+rec.start();
 
-// --- 3. EFECTO DE ESCRITURA ---
-async function escribirTexto(texto) {
-    display.textContent = "> "; 
-    for (let char of texto) {
-        display.textContent += char; 
-        await new Promise(r => setTimeout(r, 15)); 
-    }
+// --- 3. ESCRITURA INDEPENDIENTE ---
+function escribirTexto(texto) {
+    display.textContent = "> ";
+    let i = 0;
+    if(window.escrituraIntervalo) clearInterval(window.escrituraIntervalo);
+    
+    window.escrituraIntervalo = setInterval(() => {
+        if (i < texto.length) {
+            display.textContent += texto[i];
+            i++;
+        } else {
+            clearInterval(window.escrituraIntervalo);
+        }
+    }, 20);
 }
 
 // --- 4. CONFIGURACIÓN DE VOZ ---
-let vocesDisponibles = [];
-function cargarVoces() { vocesDisponibles = window.speechSynthesis.getVoices(); }
-cargarVoces();
-if (window.speechSynthesis.onvoiceschanged !== undefined) {
-    window.speechSynthesis.onvoiceschanged = cargarVoces;
-}
-
 function hablar(texto) {
+    window.speechSynthesis.cancel(); 
     const u = new SpeechSynthesisUtterance(texto);
     const voces = window.speechSynthesis.getVoices();
     
-    // Prioriza voces de Google para mayor calidad
-    const vozFemenina = voces.find(v => v.name.includes('Google español')) || voces[0];
+    // Prioridad femenina
+    const voz = voces.find(v => v.name.toLowerCase().includes('female')) || 
+                voces.find(v => v.name.toLowerCase().includes('google español')) || 
+                voces[0];
     
-    u.voice = vozFemenina;
-    u.pitch = 1.1; 
+    u.voice = voz;
+    u.pitch = 1.2; 
     u.rate = 1.05; 
     
     window.speechSynthesis.speak(u);
 }
 
-// --- RELOJ LOCAL ---
 setInterval(() => {
-    const ahora = new Date();
     const elReloj = document.getElementById('reloj');
-    if(elReloj) elReloj.innerText = ahora.toLocaleTimeString('es-MX', { hour12: false });
+    if(elReloj) elReloj.innerText = new Date().toLocaleTimeString('es-MX', { hour12: false });
 }, 1000);
