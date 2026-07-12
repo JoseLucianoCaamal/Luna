@@ -5,11 +5,10 @@
     <title>LUNA // CORE SYSTEM</title>
     <link rel="stylesheet" href="style.css">
     <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
-    <!-- Rutas corregidas para tu repositorio /Luna/ -->
-    <link rel="manifest" href="/Luna/manifest.json">
+    <link rel="manifest" href="./manifest.json">
     <script>
         if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('/Luna/sw.js')
+            navigator.serviceWorker.register('./sw.js')
                 .catch(err => console.log('Error SW:', err));
         }
     </script>
@@ -36,8 +35,9 @@
             <div class="audio-visualizer" id="visualizador-voz">
                 <div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
             </div>
+            
             <h1 class="glitch-text">LUNA // EN ESPERA</h1>
-            <div id="display" class="hologram-panel">> SISTEMA LUNAR EN LÍNEA.</div>
+            <div id="display" class="hologram-panel">> SISTEMA LUNAR EN LÍNEA. ESPERANDO COMANDOS.</div>
         </div>
     </div>
 

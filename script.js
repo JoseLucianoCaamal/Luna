@@ -9,7 +9,7 @@ const API_URL = 'https://cumulative-charlie-manufacturers-simpsons.trycloudflare
 canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
 
-// --- 1. RED NEURONAL ---
+// --- 1. RED NEURONAL LUNAR ---
 let particles = Array.from({length: 100}, () => ({
     x: Math.random() * canvas.width, y: Math.random() * canvas.height,
     vx: (Math.random() - 0.5) * 1.0, vy: (Math.random() - 0.5) * 1.0
@@ -84,12 +84,16 @@ rec.onresult = async (e) => {
                 });
                 const data = await res.json();
                 
-                // PRIORIDAD: Hablar primero, escribir en segundo plano
-                hablar(data.respuesta);
+                // PRIORIDAD 1: AUDIO AL INSTANTE
+                setTimeout(() => {
+                    hablar(data.respuesta);
+                }, 0);
+                
+                // PRIORIDAD 2: ESCRITURA EN SEGUNDO PLANO
                 escribirTexto(data.respuesta.toUpperCase());
                 
             } catch (err) {
-                hablar("Interferencia detectada, Jefe.");
+                setTimeout(() => hablar("Interferencia detectada, Jefe."), 0);
                 display.textContent = "> ERROR DE CONEXIÓN.";
             }
         } else {
@@ -105,6 +109,7 @@ rec.start();
 function escribirTexto(texto) {
     display.textContent = "> ";
     let i = 0;
+    
     if(window.escrituraIntervalo) clearInterval(window.escrituraIntervalo);
     
     window.escrituraIntervalo = setInterval(() => {
@@ -121,9 +126,8 @@ function escribirTexto(texto) {
 function hablar(texto) {
     window.speechSynthesis.cancel(); 
     const u = new SpeechSynthesisUtterance(texto);
-    const voces = window.speechSynthesis.getVoices();
     
-    // Prioridad femenina
+    const voces = window.speechSynthesis.getVoices();
     const voz = voces.find(v => v.name.toLowerCase().includes('female')) || 
                 voces.find(v => v.name.toLowerCase().includes('google español')) || 
                 voces[0];
@@ -135,6 +139,7 @@ function hablar(texto) {
     window.speechSynthesis.speak(u);
 }
 
+// --- 5. RELOJ ---
 setInterval(() => {
     const elReloj = document.getElementById('reloj');
     if(elReloj) elReloj.innerText = new Date().toLocaleTimeString('es-MX', { hour12: false });
