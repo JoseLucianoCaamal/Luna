@@ -10,7 +10,7 @@ const API_URL = 'https://cumulative-charlie-manufacturers-simpsons.trycloudflare
 canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
 
-// --- 1. RED NEURONAL LUNAR (Tus animaciones) ---
+// --- 1. RED NEURONAL LUNAR (Tus animacionesss) ---
 let particles = Array.from({length: 100}, () => ({
     x: Math.random() * canvas.width, y: Math.random() * canvas.height,
     vx: (Math.random() - 0.5) * 1.0, vy: (Math.random() - 0.5) * 1.0
