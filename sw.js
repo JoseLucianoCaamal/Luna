@@ -1,4 +1,4 @@
-const CACHE_NAME = 'luna-core-v1';
+const CACHE_NAME = 'luna-core-v1.2';
 const urlsToCache = [
     './',
     './index.html',
