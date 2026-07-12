@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>LUNA // CORE SYSTEM</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <!-- En tu index.html -->
+    <link rel="manifest" href="/manifest.json">
+    <script>
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/sw.js');
+  }
+</script>
+</head>
+<body>
+    <canvas id="canvas-core"></canvas>
+    
+    <!-- NUEVO: Barra superior de cristal esmerilado -->
+    <div class="top-glass-bar">
+        <span class="status-dot"></span>
+        <span class="sys-text">LUNA_OS // ENLACE NEURAL</span>
+        <span class="separator">|</span>
+        <span class="sys-text" id="reloj">00:00:00</span>
+        <span class="separator">|</span>
+        <span class="sys-text">MÉRIDA, YUC.</span>
+    </div>
+
+    <!-- EL NÚCLEO CENTRAL (Sin cambios, sigue siendo hermoso) -->
+    <div class="hud">
+        <div class="pulse-container">
+            <div class="pulse-ring"></div>
+            <div class="core-center"></div>
+        </div>
+        
+        <div class="info-panel">
+            <!-- Ecualizador sutil integrado arriba del texto -->
+            <div class="audio-visualizer" id="visualizador-voz">
+                <div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
+            </div>
+            
+            <h1 class="glitch-text">LUNA // EN ESPERA</h1>
+            <div id="display" class="hologram-panel">> FASE LUNAR ESTABLE. ESPERANDO COMANDOS, CARIÑO.</div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
