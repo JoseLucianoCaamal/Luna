@@ -12,9 +12,9 @@
       "type": "image/png"
     },
     {
-      "src": "./akko.png",
+      "src": "./akko.jpeg",
       "sizes": "512x512",
-      "type": "image/png"
+      "type": "image/jpeg"
     }
   ]
 }

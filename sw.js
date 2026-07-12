@@ -1,26 +1,48 @@
-self.addEventListener('install', (e) => {
-  e.waitUntil(
-    caches.open('luna-cache-v2').then((cache) => {
-      // Rutas relativas corregidas y nombre de imagen actualizado a akko.png
-      return cache.addAll([
-        './',
-        './index.html', 
-        './style.css', 
-        './script.js', 
-        './akko.png',
-        './manifest.json'
-      ]);
-    }).catch(err => console.log('Error en caché:', err))
-  );
-  self.skipWaiting(); // Fuerza la actualización inmediata
+const CACHE_NAME = 'luna-core-v1';
+const urlsToCache = [
+    './',
+    './index.html',
+    './style.css',
+    './script.js',
+    './manifest.json',
+    './akko.jpeg' // Si tu imagen es .jpeg, cámbialo a akko.jpeg
+];
+
+self.addEventListener('install', event => {
+    // skipWaiting fuerza a que la nueva versión se instale de inmediato
+    self.skipWaiting();
+    event.waitUntil(
+        caches.open(CACHE_NAME).then(cache => cache.addAll(urlsToCache))
+    );
 });
 
-self.addEventListener('activate', (e) => {
-  e.waitUntil(clients.claim()); // Toma el control de la página al instante
+self.addEventListener('fetch', event => {
+    // CORRECCIÓN CRÍTICA: Ignorar cualquier petición al cerebro de Luna (Cloudflare)
+    // Esto asegura que la IA siempre responda en vivo y sin retrasos
+    if (event.request.url.includes('trycloudflare.com')) {
+        return; 
+    }
+
+    // Solo usar caché para archivos locales visuales (html, css, imágenes)
+    event.respondWith(
+        caches.match(event.request).then(response => {
+            return response || fetch(event.request);
+        })
+    );
 });
 
-self.addEventListener('fetch', (e) => {
-  e.respondWith(
-    caches.match(e.request).then((res) => res || fetch(e.request))
-  );
+self.addEventListener('activate', event => {
+    // Limpia versiones antiguas de la caché para no saturar el celular
+    event.waitUntil(
+        caches.keys().then(cacheNames => Promise.all(
+            cacheNames.map(cache => { 
+                if (cache !== CACHE_NAME) {
+                    console.log('Borrando caché antigua:', cache);
+                    return caches.delete(cache); 
+                }
+            })
+        ))
+    );
+    // clients.claim hace que el Service Worker tome el control de la página de inmediato
+    event.waitUntil(clients.claim());
 });
