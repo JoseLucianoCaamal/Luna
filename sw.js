@@ -1,11 +1,9 @@
-const CACHE_NAME = 'luna-core-v3';
+const CACHE_NAME = 'luna-core-v3.1';
 const urlsToCache = [
-    './',
     './index.html',
     './style.css',
     './script.js',
-    './manifest.json',
-    './akko.jpeg'
+    './manifest.json'
 ];
 
 self.addEventListener('install', event => {
@@ -16,7 +14,6 @@ self.addEventListener('install', event => {
 });
 
 self.addEventListener('fetch', event => {
-    // Ignorar peticiones a Cloudflare para que la IA responda en tiempo real
     if (event.request.url.includes('trycloudflare.com')) {
         return; 
     }

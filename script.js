@@ -59,6 +59,94 @@ function animate() {
 }
 animate();
 
+// --- LÓGICA DE AGENDA (Base de Datos Local) ---
+function obtenerContactos() {
+    return JSON.parse(localStorage.getItem('lunaAgenda')) || {};
+}
+
+function guardarContacto(nombre, numero) {
+    const contactos = obtenerContactos();
+    contactos[nombre.toLowerCase()] = numero;
+    localStorage.setItem('lunaAgenda', JSON.stringify(contactos));
+    actualizarListaContactos();
+}
+
+function borrarContacto(nombre) {
+    const contactos = obtenerContactos();
+    delete contactos[nombre];
+    localStorage.setItem('lunaAgenda', JSON.stringify(contactos));
+    actualizarListaContactos();
+}
+
+function actualizarListaContactos() {
+    const lista = document.getElementById('lista-contactos');
+    const contactos = obtenerContactos();
+    lista.innerHTML = '';
+    
+    for (const [nombre, numero] of Object.entries(contactos)) {
+        const div = document.createElement('div');
+        div.className = 'contacto-item';
+        div.innerHTML = `
+            <span>${nombre.toUpperCase()} - ${numero}</span>
+            <button onclick="borrarContacto('${nombre}')">X</button>
+        `;
+        lista.appendChild(div);
+    }
+}
+
+// Eventos de la UI de Agenda
+document.getElementById('btn-agenda').addEventListener('click', () => {
+    document.getElementById('modal-agenda').classList.remove('oculto');
+    actualizarListaContactos();
+});
+
+document.getElementById('btn-cerrar-agenda').addEventListener('click', () => {
+    document.getElementById('modal-agenda').classList.add('oculto');
+});
+
+document.getElementById('btn-guardar-contacto').addEventListener('click', () => {
+    const nombre = document.getElementById('nuevo-nombre').value.trim();
+    const numero = document.getElementById('nuevo-numero').value.trim();
+    if (nombre && numero) {
+        guardarContacto(nombre, numero);
+        document.getElementById('nuevo-nombre').value = '';
+        document.getElementById('nuevo-numero').value = '';
+    }
+});
+
+// --- MODO CENTINELA (Evitar que la pantalla se apague) ---
+let wakeLock = null;
+const btnCentinela = document.getElementById('btn-centinela');
+
+async function activarModoCentinela() {
+    try {
+        wakeLock = await navigator.wakeLock.request('screen');
+        btnCentinela.textContent = "MODO CENTINELA: ON";
+        btnCentinela.classList.add('activo');
+        hablar("Modo centinela activado. Pantalla asegurada, Jefe.");
+    } catch (err) {
+        console.error("Error al activar WakeLock:", err);
+    }
+}
+
+function desactivarModoCentinela() {
+    if (wakeLock !== null) {
+        wakeLock.release();
+        wakeLock = null;
+        btnCentinela.textContent = "MODO CENTINELA: OFF";
+        btnCentinela.classList.remove('activo');
+        hablar("Modo centinela desactivado.");
+    }
+}
+
+btnCentinela.addEventListener('click', () => {
+    if (wakeLock === null) {
+        activarModoCentinela();
+    } else {
+        desactivarModoCentinela();
+    }
+});
+
 // --- INTELIGENCIA DE VOZ ---
 const Rec = window.SpeechRecognition || window.webkitSpeechRecognition;
 const rec = new Rec();
@@ -73,9 +161,24 @@ rec.onresult = async (e) => {
         window.speechSynthesis.cancel(); 
         const comando = transcript.replace(/luna/gi, '').trim();
         
+        // Módulo de Llamadas con Agenda Dinámica
+        if (comando.includes('llama a')) {
+            const nombre = comando.replace('llama a', '').trim();
+            const contactos = obtenerContactos();
+            
+            if (contactos[nombre]) {
+                setTimeout(() => hablar(`Abriendo línea con ${nombre}, Jefe.`), 0);
+                escribirTexto(`> INICIANDO LLAMADA: ${nombre.toUpperCase()}...`);
+                window.location.href = `tel:${contactos[nombre]}`;
+            } else {
+                setTimeout(() => hablar(`No tengo a ${nombre} en mi base de datos de enlaces.`), 0);
+                escribirTexto(`> CONTACTO "${nombre.toUpperCase()}" NO ENCONTRADO.`);
+            }
+            return; 
+        }
+
         if (comando.length > 0) {
             display.textContent = "> PROCESANDO...";
-            
             try {
                 const res = await fetch(API_URL, {
                     method: 'POST',
@@ -84,7 +187,6 @@ rec.onresult = async (e) => {
                 });
                 const data = await res.json();
                 
-                // Disparo ultra-prioritario para móviles
                 setTimeout(() => hablar(data.respuesta), 0);
                 escribirTexto(data.respuesta.toUpperCase());
                 
@@ -92,8 +194,6 @@ rec.onresult = async (e) => {
                 setTimeout(() => hablar("Interferencia detectada, Jefe."), 0);
                 display.textContent = "> ERROR DE CONEXIÓN.";
             }
-        } else {
-            display.textContent = "> LUNA EN LÍNEA. DIME...";
         }
     }
 };
@@ -114,21 +214,21 @@ function escribirTexto(texto) {
         } else {
             clearInterval(window.escrituraIntervalo);
         }
-    }, 20); // Ajusta la velocidad si lo deseas
+    }, 20); 
 }
 
-// --- CONFIGURACIÓN DE VOZ (Corregida para Windows) ---
+// --- CONFIGURACIÓN DE VOZ ---
 function hablar(texto) {
     window.speechSynthesis.cancel(); 
     const u = new SpeechSynthesisUtterance(texto);
-    u.lang = 'es-MX'; // Forzar que el motor sepa que es español
+    u.lang = 'es-MX'; 
     
     const voces = window.speechSynthesis.getVoices();
     
-    // Prioridad: Voces femeninas de Windows (Sabina, Helena) -> Google Español -> Cualquiera en español
     const voz = voces.find(v => v.name.includes('Sabina')) || 
                 voces.find(v => v.name.includes('Helena')) ||
                 voces.find(v => v.name.toLowerCase().includes('female') && v.lang.includes('es')) ||
+                voces.find(v => v.name === 'Google español de Estados Unidos') || 
                 voces.find(v => v.lang === 'es-MX' || v.lang === 'es-ES') || 
                 voces[0];
     
@@ -138,11 +238,6 @@ function hablar(texto) {
     
     window.speechSynthesis.speak(u);
 }
-
-// Asegurarse de que las voces carguen correctamente en PC
-window.speechSynthesis.onvoiceschanged = () => {
-    window.speechSynthesis.getVoices();
-};
 
 // --- RELOJ ---
 setInterval(() => {

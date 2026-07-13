@@ -5,11 +5,8 @@
     <title>LUNA // CORE SYSTEM</title>
     <link rel="stylesheet" href="style.css">
     <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
-    
-    <!-- Evita el error 404 del favicon en la consola -->
     <link rel="icon" type="image/jpeg" href="./akko.jpeg">
     <link rel="manifest" href="./manifest.json">
-    
     <script>
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('./sw.js')
@@ -29,6 +26,12 @@
         <span class="sys-text">MÉRIDA, YUC.</span>
     </div>
 
+    <!-- NUEVO: Botones de control rápido -->
+    <div class="control-panel">
+        <button id="btn-agenda" class="btn-luna">ABRIR AGENDA</button>
+        <button id="btn-centinela" class="btn-luna">MODO CENTINELA: OFF</button>
+    </div>
+
     <div class="hud">
         <div class="pulse-container">
             <div class="pulse-ring"></div>
@@ -39,9 +42,22 @@
             <div class="audio-visualizer" id="visualizador-voz">
                 <div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
             </div>
-            
             <h1 class="glitch-text">LUNA // EN ESPERA</h1>
-            <div id="display" class="hologram-panel">> SISTEMA LUNAR EN LÍNEA. ESPERANDO COMANDOS.</div>
+            <div id="display" class="hologram-panel">> SISTEMA LUNAR EN LÍNEA.</div>
+        </div>
+    </div>
+
+    <!-- NUEVO: Ventana de Agenda -->
+    <div id="modal-agenda" class="modal oculto">
+        <div class="modal-content">
+            <h2>AGENDA DE ENLACES</h2>
+            <div class="input-group">
+                <input type="text" id="nuevo-nombre" placeholder="Nombre (ej. mama)">
+                <input type="tel" id="nuevo-numero" placeholder="Número (ej. 9991234567)">
+                <button id="btn-guardar-contacto" class="btn-luna">GUARDAR</button>
+            </div>
+            <div id="lista-contactos" class="lista-contactos"></div>
+            <button id="btn-cerrar-agenda" class="btn-luna btn-cerrar">CERRAR</button>
         </div>
     </div>
 
