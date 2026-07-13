@@ -106,7 +106,7 @@ async function activarModoCentinela() {
         wakeLock = await navigator.wakeLock.request('screen');
         btnCentinela.textContent = "CENTINELA: ON";
         btnCentinela.classList.add('activo');
-        hablar("Modo centinela activado.");
+        hablar("Modo centinela activado. Pantalla asegurada.");
     } catch (err) { console.error("Error WakeLock:", err); }
 }
 function desactivarModoCentinela() {
@@ -130,7 +130,7 @@ let isRecognizing = false;
 rec.onstart = () => { isRecognizing = true; };
 rec.onend = () => { isRecognizing = false; rec.start(); };
 
-// Si minimizas la app y regresas, forzamos que vuelva a escuchar
+// Sensor de regreso a la app
 document.addEventListener("visibilitychange", () => {
     if (document.visibilityState === "visible" && !isRecognizing) {
         try { rec.start(); } catch(e) {}
@@ -148,12 +148,14 @@ rec.onresult = async (e) => {
             const nombre = comando.replace('llama a', '').trim();
             const contactos = obtenerContactos();
             if (contactos[nombre]) {
-                hablar(`Abriendo línea con ${nombre}. Confirma en pantalla.`);
-                escribirTexto(`> LLAMANDO A: ${nombre.toUpperCase()}`);
-                setTimeout(() => { window.location.href = `tel:${contactos[nombre]}`; }, 1500);
+                hablar(`Abriendo línea con ${nombre}. Confirma en pantalla.`, () => {
+                    escribirTexto(`> LLAMANDO A: ${nombre.toUpperCase()}`);
+                    setTimeout(() => { window.location.href = `tel:${contactos[nombre]}`; }, 1500);
+                });
             } else {
-                hablar(`No encontré a ${nombre} en la agenda.`);
-                escribirTexto(`> CONTACTO NO ENCONTRADO.`);
+                hablar(`No encontré a ${nombre} en la agenda.`, () => {
+                    escribirTexto(`> CONTACTO NO ENCONTRADO.`);
+                });
             }
             return; 
         }
@@ -168,15 +170,15 @@ rec.onresult = async (e) => {
                 });
                 const data = await res.json();
                 
-                // PRIORIDAD MÁXIMA PARA EL AUDIO
-                hablar(data.respuesta);
-                
-                // Retrasamos el texto 100ms para asegurar que el motor de voz del celular ya arrancó
-                setTimeout(() => { escribirTexto(data.respuesta.toUpperCase()); }, 100);
+                // MAGIA DE SINCRONIZACIÓN: Pasamos la escritura como una función que espera a que inicie el audio
+                hablar(data.respuesta, () => {
+                    escribirTexto(data.respuesta.toUpperCase());
+                });
                 
             } catch (err) {
-                hablar("Interferencia detectada.");
-                display.textContent = "> ERROR DE CONEXIÓN.";
+                hablar("Interferencia detectada.", () => {
+                    display.textContent = "> ERROR DE CONEXIÓN.";
+                });
             }
         }
     }
@@ -188,23 +190,49 @@ function escribirTexto(texto) {
     display.textContent = "> ";
     let i = 0;
     if(window.escrituraIntervalo) clearInterval(window.escrituraIntervalo);
+    
+    // Incrementé ligerísimamente la velocidad a 15ms para que empate mejor con la voz de Android
     window.escrituraIntervalo = setInterval(() => {
         if (i < texto.length) { display.textContent += texto[i]; i++; } 
         else { clearInterval(window.escrituraIntervalo); }
-    }, 20); 
+    }, 15); 
 }
 
-// --- AUDIO ---
-function hablar(texto) {
+// --- AUDIO SINCRONIZADO ---
+function hablar(texto, callbackOnStart) {
     window.speechSynthesis.cancel(); 
     const u = new SpeechSynthesisUtterance(texto);
     u.lang = 'es-MX'; 
+    
     const voces = window.speechSynthesis.getVoices();
     const voz = voces.find(v => v.name.includes('Sabina')) || 
                 voces.find(v => v.name.includes('Helena')) ||
                 voces.find(v => v.name.toLowerCase().includes('female') && v.lang.includes('es')) ||
                 voces.find(v => v.lang === 'es-MX' || v.lang === 'es-ES') || voces[0];
     u.voice = voz; u.pitch = 1.2; u.rate = 1.05; 
+    
+    // Cuando el celular confirme físicamente que arrancó el sonido, arranca el texto
+    u.onstart = () => {
+        if(callbackOnStart) callbackOnStart();
+    };
+
+    // Respaldo de seguridad: Algunos celulares Android bloquean el evento 'onstart'
+    // Si la voz no avisa en 200 milisegundos, forzamos el texto de todos modos
+    let arrancadorSeguro = setTimeout(() => {
+        if(callbackOnStart) {
+            callbackOnStart();
+            callbackOnStart = null; // Evita que se ejecute dos veces
+        }
+    }, 200);
+
+    u.onstart = () => {
+        clearTimeout(arrancadorSeguro);
+        if(callbackOnStart) {
+            callbackOnStart();
+            callbackOnStart = null;
+        }
+    };
+
     window.speechSynthesis.speak(u);
 }
 
