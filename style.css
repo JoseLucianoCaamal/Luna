@@ -1,12 +1,16 @@
+/* --- BASE Y FONDO --- */
 body, html {
     margin: 0; padding: 0; background: #050510; 
-    height: 100vh; overflow: hidden;
+    height: 100vh; width: 100%; overflow: hidden;
     font-family: 'Share Tech Mono', monospace; color: #e0e7ff; 
+    user-select: none;
 }
 
-#canvas-core { position: absolute; top: 0; left: 0; z-index: 1; opacity: 0.8; }
+#canvas-core { 
+    position: absolute; top: 0; left: 0; z-index: 1; opacity: 0.8; 
+}
 
-/* --- NUEVA BARRA SUPERIOR ELEGANTE --- */
+/* --- BARRA SUPERIOR ELEGANTE --- */
 .top-glass-bar {
     position: absolute; top: 30px; left: 50%; transform: translateX(-50%);
     background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.1);
@@ -21,19 +25,17 @@ body, html {
 .sys-text { font-size: 0.9rem; letter-spacing: 2px; color: rgba(224, 231, 255, 0.7); }
 .separator { color: rgba(255, 255, 255, 0.2); }
 
-/* --- INTERFAZ CEsNTRssAL --- */
+/* --- INTERFAZ CENTRAL (HUD) --- */
 .hud {
     position: absolute; top: 0; left: 0; width: 100%; height: 100%;
     z-index: 10; display: flex; align-items: center; justify-content: center;
     pointer-events: none; flex-direction: column;
 }
-
 .hud::after {
     content: ""; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
     background: radial-gradient(circle at center, transparent 20%, rgba(0, 0, 0, 0.7) 100%);
     pointer-events: none; z-index: 100; opacity: 0.8;
 }
-
 .pulse-container { 
     position: relative; width: 180px; height: 180px; margin-bottom: 40px; 
     display: flex; justify-content: center; align-items: center; 
@@ -53,8 +55,10 @@ body, html {
 }
 
 /* --- PANEL DE TEXTO Y ECUALIZADOR --- */
-.info-panel { text-align: center; position: relative; }
-
+.info-panel { 
+    text-align: center; position: relative; width: 90%; max-width: 800px; 
+    z-index: 101; pointer-events: auto; 
+}
 .audio-visualizer {
     display: flex; justify-content: center; gap: 4px; height: 20px; align-items: flex-end;
     margin-bottom: 15px; opacity: 0; transition: opacity 0.3s ease;
@@ -63,23 +67,21 @@ body, html {
     width: 4px; background: rgba(224, 231, 255, 0.3); border-radius: 2px;
     transition: height 0.1s ease; height: 4px;
 }
-
 .glitch-text { 
     text-transform: uppercase; letter-spacing: 5px; font-weight: 300; 
     text-shadow: 0 0 15px rgba(255, 255, 255, 0.8); margin-bottom: 20px; transition: 0.3s all;
 }
-
 .hologram-panel {
     background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.1);
     padding: 20px 30px; border-radius: 12px; backdrop-filter: blur(10px);
     box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6), inset 0 0 20px rgba(255, 255, 255, 0.05);
-    max-width: 800px; font-size: 1.1rem; line-height: 1.6; text-align: left;
+    font-size: 1.1rem; line-height: 1.6; text-align: left;
     min-height: 60px; transition: 0.3s all; font-weight: 300;
     white-space: pre-wrap; word-wrap: break-word; 
     transform: perspective(800px) rotateX(5deg); transform-origin: bottom center;
 }
 
-/* Animaciones */
+/* --- ANIMACIONES Y ESTADO 'HABLANDO' --- */
 @keyframes orbit { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
 @keyframes pulseGlow {
@@ -88,7 +90,6 @@ body, html {
     100% { box-shadow: 0 0 40px #ffffff, 0 0 80px #a78bfa; }
 }
 
-/* === MODO HABLANDO (Aura Púrpura) === */
 .speaking .core-center { background: #ffffff; animation: pulseGlow 1.5s ease-in-out infinite; }
 .speaking .pulse-ring { border-color: rgba(167, 139, 250, 0.5); animation: orbit 4s linear infinite; }
 .speaking .pulse-ring::before { background: #a78bfa; box-shadow: 0 0 15px #a78bfa; }
@@ -101,116 +102,52 @@ body, html {
 .speaking .audio-visualizer { opacity: 1; }
 .speaking .bar { background: #a78bfa; box-shadow: 0 0 10px #a78bfa; }
 
-/* --- NUEVOS ESTILOS PARA AGENDA Y BOTONES --- */
+/* --- CONTROLES (BOTONES AGENDA/CENTINELA) --- */
 .control-panel {
-    position: absolute;
-    top: 60px;
-    left: 20px;
-    z-index: 100;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
+    position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%);
+    z-index: 100; display: flex; gap: 10px; width: 90%; justify-content: center; pointer-events: auto;
 }
-
 .btn-luna {
-    background: rgba(167, 139, 250, 0.1);
-    border: 1px solid rgba(167, 139, 250, 0.4);
-    color: #a78bfa;
-    font-family: 'Share Tech Mono', monospace;
-    padding: 8px 15px;
-    cursor: pointer;
-    border-radius: 4px;
-    backdrop-filter: blur(5px);
-    transition: all 0.3s ease;
-    text-transform: uppercase;
+    background: rgba(167, 139, 250, 0.1); border: 1px solid rgba(167, 139, 250, 0.4);
+    color: #a78bfa; font-family: 'Share Tech Mono', monospace; padding: 10px 15px;
+    cursor: pointer; border-radius: 4px; backdrop-filter: blur(5px);
+    transition: all 0.3s ease; text-transform: uppercase; font-size: 0.8rem; flex: 1; max-width: 150px;
 }
+.btn-luna:hover { background: rgba(167, 139, 250, 0.3); box-shadow: 0 0 10px rgba(167, 139, 250, 0.5); }
+.btn-luna.activo { background: rgba(167, 139, 250, 0.4); color: #fff; border-color: #fff; box-shadow: 0 0 15px rgba(167, 139, 250, 0.8); }
 
-.btn-luna:hover {
-    background: rgba(167, 139, 250, 0.3);
-    box-shadow: 0 0 10px rgba(167, 139, 250, 0.5);
+/* --- MODAL AGENDA --- */
+.modal { 
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+    background: rgba(0, 0, 0, 0.8); display: flex; justify-content: center; 
+    align-items: center; z-index: 200; backdrop-filter: blur(8px); pointer-events: auto; 
 }
-
-.btn-luna.activo {
-    background: rgba(167, 139, 250, 0.4);
-    color: #fff;
-    border-color: #fff;
-    box-shadow: 0 0 15px rgba(167, 139, 250, 0.8);
+.modal.oculto { display: none; }
+.modal-content { 
+    background: rgba(15, 15, 25, 0.9); border: 1px solid rgba(167, 139, 250, 0.5); 
+    padding: 20px; border-radius: 8px; width: 90%; max-width: 400px; 
+    box-shadow: 0 0 20px rgba(167, 139, 250, 0.2); 
 }
-
-/* Modal Agenda */
-.modal {
-    position: fixed;
-    top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(0, 0, 0, 0.8);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 200;
-    backdrop-filter: blur(8px);
+.modal-content h2 { margin-top: 0; text-align: center; border-bottom: 1px solid rgba(167, 139, 250, 0.3); padding-bottom: 10px; }
+.input-group { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
+.input-group input { 
+    background: rgba(0, 0, 0, 0.5); border: 1px solid rgba(167, 139, 250, 0.4); 
+    color: #fff; padding: 10px; font-family: 'Share Tech Mono', monospace; border-radius: 4px; 
 }
+.lista-contactos { max-height: 200px; overflow-y: auto; margin-bottom: 15px; }
+.contacto-item { display: flex; justify-content: space-between; padding: 8px; border-bottom: 1px solid rgba(167, 139, 250, 0.2); }
+.contacto-item button { background: none; border: 1px solid #ef4444; color: #ef4444; cursor: pointer; border-radius: 3px; }
+.btn-cerrar { width: 100%; border-color: rgba(255, 255, 255, 0.3); color: #ccc; max-width: 100%; }
 
-.modal.oculto {
-    display: none;
+/* --- AJUSTES RESPONSIVOS (MÓVIL / PC) --- */
+@media (min-width: 768px) {
+    .control-panel { bottom: auto; top: 90px; left: 20px; transform: none; flex-direction: column; width: auto; }
 }
-
-.modal-content {
-    background: rgba(15, 15, 25, 0.9);
-    border: 1px solid rgba(167, 139, 250, 0.5);
-    padding: 20px;
-    border-radius: 8px;
-    width: 90%;
-    max-width: 400px;
-    color: #a78bfa;
-    font-family: 'Share Tech Mono', monospace;
-    box-shadow: 0 0 20px rgba(167, 139, 250, 0.2);
-}
-
-.modal-content h2 {
-    margin-top: 0;
-    text-align: center;
-    border-bottom: 1px solid rgba(167, 139, 250, 0.3);
-    padding-bottom: 10px;
-}
-
-.input-group {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    margin-bottom: 20px;
-}
-
-.input-group input {
-    background: rgba(0, 0, 0, 0.5);
-    border: 1px solid rgba(167, 139, 250, 0.4);
-    color: #fff;
-    padding: 10px;
-    font-family: 'Share Tech Mono', monospace;
-    border-radius: 4px;
-}
-
-.lista-contactos {
-    max-height: 200px;
-    overflow-y: auto;
-    margin-bottom: 15px;
-}
-
-.contacto-item {
-    display: flex;
-    justify-content: space-between;
-    padding: 8px;
-    border-bottom: 1px solid rgba(167, 139, 250, 0.2);
-}
-
-.contacto-item button {
-    background: none;
-    border: 1px solid #ef4444;
-    color: #ef4444;
-    cursor: pointer;
-    border-radius: 3px;
-}
-
-.btn-cerrar {
-    width: 100%;
-    border-color: rgba(255, 255, 255, 0.3);
-    color: #ccc;
+@media (max-width: 500px) {
+    .hide-mobile { display: none; }
+    .pulse-container { width: 120px; height: 120px; margin-bottom: 20px; }
+    .pulse-ring { width: 120px; height: 120px; }
+    .core-center { width: 40px; height: 40px; }
+    .hologram-panel { transform: none; font-size: 0.95rem; }
+    .top-glass-bar { padding: 8px 15px; }
 }

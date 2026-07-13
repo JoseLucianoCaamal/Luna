@@ -9,8 +9,8 @@ const API_URL = 'https://cumulative-charlie-manufacturers-simpsons.trycloudflare
 canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
 
-// --- RED NEURONAL LUNAR ---
-let particles = Array.from({length: 100}, () => ({
+// --- RED NEURONAL ---
+let particles = Array.from({length: 80}, () => ({
     x: Math.random() * canvas.width, y: Math.random() * canvas.height,
     vx: (Math.random() - 0.5) * 1.0, vy: (Math.random() - 0.5) * 1.0
 }));
@@ -59,100 +59,83 @@ function animate() {
 }
 animate();
 
-// --- LÓGICA DE AGENDA (Base de Datos Local) ---
-function obtenerContactos() {
-    return JSON.parse(localStorage.getItem('lunaAgenda')) || {};
-}
-
+// --- LÓGICA DE AGENDA ---
+function obtenerContactos() { return JSON.parse(localStorage.getItem('lunaAgenda')) || {}; }
 function guardarContacto(nombre, numero) {
     const contactos = obtenerContactos();
     contactos[nombre.toLowerCase()] = numero;
     localStorage.setItem('lunaAgenda', JSON.stringify(contactos));
     actualizarListaContactos();
 }
-
 function borrarContacto(nombre) {
     const contactos = obtenerContactos();
     delete contactos[nombre];
     localStorage.setItem('lunaAgenda', JSON.stringify(contactos));
     actualizarListaContactos();
 }
-
 function actualizarListaContactos() {
     const lista = document.getElementById('lista-contactos');
     const contactos = obtenerContactos();
     lista.innerHTML = '';
-    
     for (const [nombre, numero] of Object.entries(contactos)) {
-        const div = document.createElement('div');
-        div.className = 'contacto-item';
-        div.innerHTML = `
-            <span>${nombre.toUpperCase()} - ${numero}</span>
-            <button onclick="borrarContacto('${nombre}')">X</button>
-        `;
+        const div = document.createElement('div'); div.className = 'contacto-item';
+        div.innerHTML = `<span>${nombre.toUpperCase()} - ${numero}</span><button onclick="borrarContacto('${nombre}')">X</button>`;
         lista.appendChild(div);
     }
 }
 
-// Eventos de la UI de Agenda
 document.getElementById('btn-agenda').addEventListener('click', () => {
     document.getElementById('modal-agenda').classList.remove('oculto');
     actualizarListaContactos();
 });
-
-document.getElementById('btn-cerrar-agenda').addEventListener('click', () => {
-    document.getElementById('modal-agenda').classList.add('oculto');
-});
-
+document.getElementById('btn-cerrar-agenda').addEventListener('click', () => { document.getElementById('modal-agenda').classList.add('oculto'); });
 document.getElementById('btn-guardar-contacto').addEventListener('click', () => {
     const nombre = document.getElementById('nuevo-nombre').value.trim();
     const numero = document.getElementById('nuevo-numero').value.trim();
     if (nombre && numero) {
         guardarContacto(nombre, numero);
-        document.getElementById('nuevo-nombre').value = '';
-        document.getElementById('nuevo-numero').value = '';
+        document.getElementById('nuevo-nombre').value = ''; document.getElementById('nuevo-numero').value = '';
     }
 });
 
-// --- MODO CENTINELA (Evitar que la pantalla se apague) ---
+// --- MODO CENTINELA ---
 let wakeLock = null;
 const btnCentinela = document.getElementById('btn-centinela');
-
 async function activarModoCentinela() {
     try {
         wakeLock = await navigator.wakeLock.request('screen');
-        btnCentinela.textContent = "MODO CENTINELA: ON";
+        btnCentinela.textContent = "CENTINELA: ON";
         btnCentinela.classList.add('activo');
-        hablar("Modo centinela activado. Pantalla asegurada, Jefe.");
-    } catch (err) {
-        console.error("Error al activar WakeLock:", err);
-    }
+        hablar("Modo centinela activado.");
+    } catch (err) { console.error("Error WakeLock:", err); }
 }
-
 function desactivarModoCentinela() {
     if (wakeLock !== null) {
-        wakeLock.release();
-        wakeLock = null;
-        btnCentinela.textContent = "MODO CENTINELA: OFF";
+        wakeLock.release(); wakeLock = null;
+        btnCentinela.textContent = "CENTINELA: OFF";
         btnCentinela.classList.remove('activo');
         hablar("Modo centinela desactivado.");
     }
 }
+btnCentinela.addEventListener('click', () => { wakeLock === null ? activarModoCentinela() : desactivarModoCentinela(); });
 
-btnCentinela.addEventListener('click', () => {
-    if (wakeLock === null) {
-        activarModoCentinela();
-    } else {
-        desactivarModoCentinela();
-    }
-});
-
-// --- INTELIGENCIA DE VOZ ---
+// --- INTELIGENCIA DE VOZ Y REACTIVACIÓN ---
 const Rec = window.SpeechRecognition || window.webkitSpeechRecognition;
 const rec = new Rec();
 rec.continuous = false;
 rec.interimResults = false;
 rec.lang = 'es-MX';
+let isRecognizing = false;
+
+rec.onstart = () => { isRecognizing = true; };
+rec.onend = () => { isRecognizing = false; rec.start(); };
+
+// Si minimizas la app y regresas, forzamos que vuelva a escuchar
+document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "visible" && !isRecognizing) {
+        try { rec.start(); } catch(e) {}
+    }
+});
 
 rec.onresult = async (e) => {
     const transcript = e.results[e.results.length - 1][0].transcript.toLowerCase();
@@ -161,18 +144,16 @@ rec.onresult = async (e) => {
         window.speechSynthesis.cancel(); 
         const comando = transcript.replace(/luna/gi, '').trim();
         
-        // Módulo de Llamadas con Agenda Dinámica
         if (comando.includes('llama a')) {
             const nombre = comando.replace('llama a', '').trim();
             const contactos = obtenerContactos();
-            
             if (contactos[nombre]) {
-                setTimeout(() => hablar(`Abriendo línea con ${nombre}, Jefe.`), 0);
-                escribirTexto(`> INICIANDO LLAMADA: ${nombre.toUpperCase()}...`);
-                window.location.href = `tel:${contactos[nombre]}`;
+                hablar(`Abriendo línea con ${nombre}. Confirma en pantalla.`);
+                escribirTexto(`> LLAMANDO A: ${nombre.toUpperCase()}`);
+                setTimeout(() => { window.location.href = `tel:${contactos[nombre]}`; }, 1500);
             } else {
-                setTimeout(() => hablar(`No tengo a ${nombre} en mi base de datos de enlaces.`), 0);
-                escribirTexto(`> CONTACTO "${nombre.toUpperCase()}" NO ENCONTRADO.`);
+                hablar(`No encontré a ${nombre} en la agenda.`);
+                escribirTexto(`> CONTACTO NO ENCONTRADO.`);
             }
             return; 
         }
@@ -187,59 +168,46 @@ rec.onresult = async (e) => {
                 });
                 const data = await res.json();
                 
-                setTimeout(() => hablar(data.respuesta), 0);
-                escribirTexto(data.respuesta.toUpperCase());
+                // PRIORIDAD MÁXIMA PARA EL AUDIO
+                hablar(data.respuesta);
+                
+                // Retrasamos el texto 100ms para asegurar que el motor de voz del celular ya arrancó
+                setTimeout(() => { escribirTexto(data.respuesta.toUpperCase()); }, 100);
                 
             } catch (err) {
-                setTimeout(() => hablar("Interferencia detectada, Jefe."), 0);
+                hablar("Interferencia detectada.");
                 display.textContent = "> ERROR DE CONEXIÓN.";
             }
         }
     }
 };
-
-rec.onend = () => rec.start(); 
 rec.start();
 
-// --- ESCRITURA INDEPENDIENTE ---
+// --- ESCRITURA ---
 function escribirTexto(texto) {
     display.textContent = "> ";
     let i = 0;
     if(window.escrituraIntervalo) clearInterval(window.escrituraIntervalo);
-    
     window.escrituraIntervalo = setInterval(() => {
-        if (i < texto.length) {
-            display.textContent += texto[i];
-            i++;
-        } else {
-            clearInterval(window.escrituraIntervalo);
-        }
+        if (i < texto.length) { display.textContent += texto[i]; i++; } 
+        else { clearInterval(window.escrituraIntervalo); }
     }, 20); 
 }
 
-// --- CONFIGURACIÓN DE VOZ ---
+// --- AUDIO ---
 function hablar(texto) {
     window.speechSynthesis.cancel(); 
     const u = new SpeechSynthesisUtterance(texto);
     u.lang = 'es-MX'; 
-    
     const voces = window.speechSynthesis.getVoices();
-    
     const voz = voces.find(v => v.name.includes('Sabina')) || 
                 voces.find(v => v.name.includes('Helena')) ||
                 voces.find(v => v.name.toLowerCase().includes('female') && v.lang.includes('es')) ||
-                voces.find(v => v.name === 'Google español de Estados Unidos') || 
-                voces.find(v => v.lang === 'es-MX' || v.lang === 'es-ES') || 
-                voces[0];
-    
-    u.voice = voz;
-    u.pitch = 1.2; 
-    u.rate = 1.05; 
-    
+                voces.find(v => v.lang === 'es-MX' || v.lang === 'es-ES') || voces[0];
+    u.voice = voz; u.pitch = 1.2; u.rate = 1.05; 
     window.speechSynthesis.speak(u);
 }
 
-// --- RELOJ ---
 setInterval(() => {
     const elReloj = document.getElementById('reloj');
     if(elReloj) elReloj.innerText = new Date().toLocaleTimeString('es-MX', { hour12: false });

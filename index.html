@@ -2,6 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>LUNA // CORE SYSTEM</title>
     <link rel="stylesheet" href="style.css">
     <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
@@ -9,8 +10,7 @@
     <link rel="manifest" href="./manifest.json">
     <script>
         if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('./sw.js')
-                .catch(err => console.log('Error SW:', err));
+            navigator.serviceWorker.register('./sw.js').catch(err => console.log('Error SW:', err));
         }
     </script>
 </head>
@@ -19,17 +19,16 @@
     
     <div class="top-glass-bar">
         <span class="status-dot"></span>
-        <span class="sys-text">LUNA_OS // ENLACE NEURAL</span>
-        <span class="separator">|</span>
+        <span class="sys-text hide-mobile">LUNA_OS // ENLACE NEURAL</span>
+        <span class="separator hide-mobile">|</span>
         <span class="sys-text" id="reloj">00:00:00</span>
         <span class="separator">|</span>
         <span class="sys-text">MÉRIDA, YUC.</span>
     </div>
 
-    <!-- NUEVO: Botones de control rápido -->
     <div class="control-panel">
-        <button id="btn-agenda" class="btn-luna">ABRIR AGENDA</button>
-        <button id="btn-centinela" class="btn-luna">MODO CENTINELA: OFF</button>
+        <button id="btn-agenda" class="btn-luna">AGENDA</button>
+        <button id="btn-centinela" class="btn-luna">CENTINELA: OFF</button>
     </div>
 
     <div class="hud">
@@ -47,7 +46,7 @@
         </div>
     </div>
 
-    <!-- NUEVO: Ventana de Agenda -->
+    <!-- Ventana de Agenda -->
     <div id="modal-agenda" class="modal oculto">
         <div class="modal-content">
             <h2>AGENDA DE ENLACES</h2>
