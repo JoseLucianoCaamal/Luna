@@ -170,7 +170,6 @@ rec.onresult = async (e) => {
                 });
                 const data = await res.json();
                 
-                // MAGIA DE SINCRONIZACIÓN: Pasamos la escritura como una función que espera a que inicie el audio
                 hablar(data.respuesta, () => {
                     escribirTexto(data.respuesta.toUpperCase());
                 });
@@ -191,37 +190,48 @@ function escribirTexto(texto) {
     let i = 0;
     if(window.escrituraIntervalo) clearInterval(window.escrituraIntervalo);
     
-    // Incrementé ligerísimamente la velocidad a 15ms para que empate mejor con la voz de Android
     window.escrituraIntervalo = setInterval(() => {
         if (i < texto.length) { display.textContent += texto[i]; i++; } 
         else { clearInterval(window.escrituraIntervalo); }
     }, 15); 
 }
 
-// --- AUDIO SINCRONIZADO ---
+// --- AUDIO SINCRONIZADO Y CAZADOR DE VOCES FEMENINAS ---
+
+// Obligamos al navegador a cargar las voces en la memoria del celular
+window.speechSynthesis.onvoiceschanged = () => {
+    window.speechSynthesis.getVoices();
+};
+
 function hablar(texto, callbackOnStart) {
     window.speechSynthesis.cancel(); 
     const u = new SpeechSynthesisUtterance(texto);
     u.lang = 'es-MX'; 
     
     const voces = window.speechSynthesis.getVoices();
+    
+    // Búsqueda exhaustiva para celular (Android/iOS) y PC (Linux/Windows)
     const voz = voces.find(v => v.name.includes('Sabina')) || 
                 voces.find(v => v.name.includes('Helena')) ||
+                voces.find(v => v.name === 'Google español de Estados Unidos') || // Voz femenina en la mayoría de Android
+                voces.find(v => v.name.includes('Google español')) || // Alternativa Android
                 voces.find(v => v.name.toLowerCase().includes('female') && v.lang.includes('es')) ||
-                voces.find(v => v.lang === 'es-MX' || v.lang === 'es-ES') || voces[0];
-    u.voice = voz; u.pitch = 1.2; u.rate = 1.05; 
+                voces.find(v => v.name.toLowerCase().includes('mujer') && v.lang.includes('es')) ||
+                voces.find(v => v.lang === 'es-MX' || v.lang === 'es-ES') || 
+                voces[0];
+                
+    if (voz) u.voice = voz; 
+    u.pitch = 1.2; 
+    u.rate = 1.05; 
     
-    // Cuando el celular confirme físicamente que arrancó el sonido, arranca el texto
     u.onstart = () => {
         if(callbackOnStart) callbackOnStart();
     };
 
-    // Respaldo de seguridad: Algunos celulares Android bloquean el evento 'onstart'
-    // Si la voz no avisa en 200 milisegundos, forzamos el texto de todos modos
     let arrancadorSeguro = setTimeout(() => {
         if(callbackOnStart) {
             callbackOnStart();
-            callbackOnStart = null; // Evita que se ejecute dos veces
+            callbackOnStart = null; 
         }
     }, 200);
 
@@ -236,6 +246,7 @@ function hablar(texto, callbackOnStart) {
     window.speechSynthesis.speak(u);
 }
 
+// --- RELOJ ---
 setInterval(() => {
     const elReloj = document.getElementById('reloj');
     if(elReloj) elReloj.innerText = new Date().toLocaleTimeString('es-MX', { hour12: false });
