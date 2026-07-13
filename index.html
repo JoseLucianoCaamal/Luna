@@ -5,7 +5,11 @@
     <title>LUNA // CORE SYSTEM</title>
     <link rel="stylesheet" href="style.css">
     <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    
+    <!-- Evita el error 404 del favicon en la consola -->
+    <link rel="icon" type="image/jpeg" href="./akko.jpeg">
     <link rel="manifest" href="./manifest.json">
+    
     <script>
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('./sw.js')

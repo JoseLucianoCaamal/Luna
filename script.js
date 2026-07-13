@@ -9,7 +9,7 @@ const API_URL = 'https://cumulative-charlie-manufacturers-simpsons.trycloudflare
 canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
 
-// --- 1. RED NEURONAL LUNAR ---
+// --- RED NEURONAL LUNAR ---
 let particles = Array.from({length: 100}, () => ({
     x: Math.random() * canvas.width, y: Math.random() * canvas.height,
     vx: (Math.random() - 0.5) * 1.0, vy: (Math.random() - 0.5) * 1.0
@@ -59,7 +59,7 @@ function animate() {
 }
 animate();
 
-// --- 2. INTELIGENCIA DE VOZ ---
+// --- INTELIGENCIA DE VOZ ---
 const Rec = window.SpeechRecognition || window.webkitSpeechRecognition;
 const rec = new Rec();
 rec.continuous = false;
@@ -84,12 +84,8 @@ rec.onresult = async (e) => {
                 });
                 const data = await res.json();
                 
-                // PRIORIDAD 1: AUDIO AL INSTANTE
-                setTimeout(() => {
-                    hablar(data.respuesta);
-                }, 0);
-                
-                // PRIORIDAD 2: ESCRITURA EN SEGUNDO PLANO
+                // Disparo ultra-prioritario para móviles
+                setTimeout(() => hablar(data.respuesta), 0);
                 escribirTexto(data.respuesta.toUpperCase());
                 
             } catch (err) {
@@ -105,11 +101,10 @@ rec.onresult = async (e) => {
 rec.onend = () => rec.start(); 
 rec.start();
 
-// --- 3. ESCRITURA INDEPENDIENTE ---
+// --- ESCRITURA INDEPENDIENTE ---
 function escribirTexto(texto) {
     display.textContent = "> ";
     let i = 0;
-    
     if(window.escrituraIntervalo) clearInterval(window.escrituraIntervalo);
     
     window.escrituraIntervalo = setInterval(() => {
@@ -119,17 +114,22 @@ function escribirTexto(texto) {
         } else {
             clearInterval(window.escrituraIntervalo);
         }
-    }, 20);
+    }, 20); // Ajusta la velocidad si lo deseas
 }
 
-// --- 4. CONFIGURACIÓN DE VOZ ---
+// --- CONFIGURACIÓN DE VOZ (Corregida para Windows) ---
 function hablar(texto) {
     window.speechSynthesis.cancel(); 
     const u = new SpeechSynthesisUtterance(texto);
+    u.lang = 'es-MX'; // Forzar que el motor sepa que es español
     
     const voces = window.speechSynthesis.getVoices();
-    const voz = voces.find(v => v.name.toLowerCase().includes('female')) || 
-                voces.find(v => v.name.toLowerCase().includes('google español')) || 
+    
+    // Prioridad: Voces femeninas de Windows (Sabina, Helena) -> Google Español -> Cualquiera en español
+    const voz = voces.find(v => v.name.includes('Sabina')) || 
+                voces.find(v => v.name.includes('Helena')) ||
+                voces.find(v => v.name.toLowerCase().includes('female') && v.lang.includes('es')) ||
+                voces.find(v => v.lang === 'es-MX' || v.lang === 'es-ES') || 
                 voces[0];
     
     u.voice = voz;
@@ -139,7 +139,12 @@ function hablar(texto) {
     window.speechSynthesis.speak(u);
 }
 
-// --- 5. RELOJ ---
+// Asegurarse de que las voces carguen correctamente en PC
+window.speechSynthesis.onvoiceschanged = () => {
+    window.speechSynthesis.getVoices();
+};
+
+// --- RELOJ ---
 setInterval(() => {
     const elReloj = document.getElementById('reloj');
     if(elReloj) elReloj.innerText = new Date().toLocaleTimeString('es-MX', { hour12: false });
